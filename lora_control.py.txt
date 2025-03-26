@@ -1,0 +1,26 @@
+import serial
+import time
+
+# Configure LoRa Serial Port
+lora_serial = serial.Serial('COM3', 9600, timeout=1)
+
+# Main Application Loop
+last_command = None
+while True:
+    # Read data from LoRa
+    if lora_serial.in_waiting > 0:
+        data = lora_serial.readline().decode('utf-8').strip()
+        print(f"Received: {data}")
+        
+        # Parse temperature
+        if data.startswith("TEMP:"):
+            temperature = float(data.split(":")[1])
+            print(f"Temperature: {temperature}°C")
+            
+            # Determine actuation command
+            command = "ON" if temperature > 25 else "OFF"
+            if command != last_command:
+                lora_serial.write(f"{command}\n".encode('utf-8'))
+                print(f"Sent Command: {command}")
+                last_command = command
+    time.sleep(0.5)
